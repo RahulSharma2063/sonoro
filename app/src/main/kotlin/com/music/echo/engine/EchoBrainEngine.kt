@@ -65,7 +65,7 @@ class EchoBrainEngine @Inject constructor(
                     trackingJob?.cancel()
                     hasTriggeredAiQueue = false
                     
-                    // Remove Echo Brain items from the queue
+                    // Remove Sonoro Brain items from the queue
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                         val player = connection.player
                         val toRemove = mutableListOf<Int>()
@@ -228,7 +228,7 @@ class EchoBrainEngine @Inject constructor(
                         duration = it.duration,
                         album = it.album,
                         source = QueueItemSource.ECHO_BRAIN,
-                        suggestedBy = "Echo Brain",
+                        suggestedBy = "Sonoro Brain",
                         thumbnailUrl = it.thumbnailUrl
                     )
                     newMeta.toMediaItem()
@@ -274,7 +274,7 @@ class EchoBrainEngine @Inject constructor(
                             duration = it.duration,
                             album = it.album,
                             source = QueueItemSource.ECHO_BRAIN,
-                            suggestedBy = "Echo Brain",
+                            suggestedBy = "Sonoro Brain",
                             thumbnailUrl = it.thumbnailUrl
                         )
                     }

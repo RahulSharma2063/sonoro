@@ -141,12 +141,12 @@ highlightKey: String? = null) {
                     )
                 )
             }
-            if ("echo brain".contains(searchLower)) {
+            if ("sonoro brain".contains(searchLower)) {
                 add(
                     Material3SettingsItem(
-    isHighlighted = (highlightKey == "Echo Brain (Beta)"),
+    isHighlighted = (highlightKey == "Sonoro Brain (Beta)"),
                         icon = rememberVectorPainter(Icons.Outlined.AutoAwesome),
-                        title = { Text("Echo Brain (Beta)") },
+                        title = { Text("Sonoro Brain (Beta)") },
                         onClick = { navController.navigate("settings/echo_brain") }
                     )
                 )

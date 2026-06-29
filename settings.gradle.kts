@@ -16,7 +16,7 @@ dependencyResolutionManagement {
 //     id("org.gradle.toolchains.foojay-resolver-convention") version("1.0.0")
 // }
 
-rootProject.name = "echomusic"
+rootProject.name = "sonoromusic"
 include(
     ":app",
     ":innertube",
@@ -30,7 +30,7 @@ include(
     ":artistvideo",
     ":jiosaavn",
     ":canvas",
-    ":echomusiccanvas",
+    ":sonoromusiccanvas",
     ":applecanvas",
     ":unison"
 )

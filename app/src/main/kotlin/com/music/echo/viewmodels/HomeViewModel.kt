@@ -423,7 +423,7 @@ class HomeViewModel @Inject constructor(
             val playlistItem = PlaylistItem(
                 id = "echo_brain_mix_local",
                 title = "Made for You",
-                author = Artist(name = "Echo Brain", id = null),
+                author = Artist(name = "Sonoro Brain", id = null),
                 songCountText = "${songs.size} songs",
                 thumbnail = songs.firstOrNull()?.thumbnail ?: "",
                 playEndpoint = WatchEndpoint(videoId = songs.firstOrNull()?.id ?: "", playlistId = "echo_brain_mix_local"),

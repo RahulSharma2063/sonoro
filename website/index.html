@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonoro Music - The Premium Android Player</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Glow Background Spheres -->
+    <div class="glow-sphere sphere-1"></div>
+    <div class="glow-sphere sphere-2"></div>
+
+    <!-- Navigation Header -->
+    <header class="header">
+        <div class="container nav-container">
+            <div class="logo">
+                <div class="logo-icon">S</div>
+                <span class="logo-text">Sonoro Music</span>
+            </div>
+            <a href="Sonoro_Music.apk" class="btn download-nav-btn" download><i class="fas fa-download"></i> Download APK</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container hero-grid">
+            <div class="hero-content">
+                <span class="badge"><i class="fas fa-sparkles"></i> Designed for Android</span>
+                <h1>Unleash Your Sound. <br><span class="gradient-text">Sonoro Music.</span></h1>
+                <p class="hero-desc">An elegant, ad-free, high-fidelity music streaming and local player companion. Built under Rahul Sharma's vision, Sonoro Music brings on-device AI recommendation, instant audio fingerprinting, and synced lyrics right to your pocket.</p>
+                <div class="hero-actions">
+                    <a href="Sonoro_Music.apk" class="btn primary-btn" download><i class="fas fa-download"></i> Install Sonoro App</a>
+                    <a href="#features" class="btn secondary-btn">Explore Features <i class="fas fa-arrow-down"></i></a>
+                </div>
+            </div>
+            <div class="hero-graphics">
+                <div class="device-mockup">
+                    <div class="mock-screen">
+                        <div class="mock-header">
+                            <i class="fas fa-wifi"></i>
+                            <span>Sonoro Music</span>
+                            <i class="fas fa-battery-three-quarters"></i>
+                        </div>
+                        <div class="mock-player-container">
+                            <div class="mock-album-art">
+                                <canvas id="visualizer-canvas"></canvas>
+                                <div class="art-pulse" id="mock-pulse"></div>
+                                <i class="fas fa-music" id="music-note-icon"></i>
+                            </div>
+                            <div class="mock-meta">
+                                <h3 id="mock-title">Active Playback</h3>
+                                <p id="mock-artist">Rebranded Companion</p>
+                            </div>
+                            <!-- Mock Player Seekbar -->
+                            <div class="mock-progress-container" id="mock-progress-container">
+                                <div class="mock-progress-bar">
+                                    <div class="mock-progress-fill" id="mock-progress-fill"></div>
+                                </div>
+                                <div class="mock-time-info">
+                                    <span id="mock-time-current">0:00</span>
+                                    <span id="mock-time-duration">0:00</span>
+                                </div>
+                            </div>
+                            <div class="mock-controls">
+                                <i class="fas fa-random" id="mock-shuffle"></i>
+                                <i class="fas fa-step-backward" id="mock-prev"></i>
+                                <div class="mock-play-btn" id="mock-play-pause"><i class="fas fa-play"></i></div>
+                                <i class="fas fa-step-forward" id="mock-next"></i>
+                                <i class="fas fa-redo" id="mock-repeat"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Features Grid -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Designed for Audiophiles</h2>
+                <p>Enjoy premium playback features built directly into a lightweight package.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-shield-halved"></i></div>
+                    <h3>Ad-Free Listening</h3>
+                    <p>Zero interruptions. Stream directly from decentralized servers without intrusive audio ads.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                    <h3>AI Recommendations</h3>
+                    <p>On-device neural scoring analyzes your local skips and repeat counts to order suggestions.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-cloud-arrow-down"></i></div>
+                    <h3>Offline Caching</h3>
+                    <p>Automatically saves your active playback tracks locally so you can play without an internet connection.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-music"></i></div>
+                    <h3>Synced Lyrics</h3>
+                    <p>Instantly pulls synchronized timing lyrics for millions of tracks to display in real-time.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Developer Section -->
+    <section id="about" class="about-section">
+        <div class="container">
+            <div class="about-card">
+                <div class="about-avatar">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="about-info">
+                    <h2>Developer: Rahul Sharma</h2>
+                    <p class="about-subtitle">Creator & Lead Architect</p>
+                    <p class="about-description">A passionate engineer specialized in creating high-performance, immersive, and visually stunning digital products. Sonoro Music is developed to combine top-tier local playback engines with absolute privacy and zero ad interruptions.</p>
+                    <div class="about-socials">
+                        <a href="https://github.com/RahulSharma2063" target="_blank" class="about-social-btn github-btn">
+                            <i class="fab fa-github"></i> GitHub
+                        </a>
+                        <a href="https://www.instagram.com/superior.rahul" target="_blank" class="about-social-btn instagram-btn">
+                            <i class="fab fa-instagram"></i> Instagram
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>&copy; 2026 Sonoro Music. Developed by Rahul Sharma. Presented for College Review.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

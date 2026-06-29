@@ -241,7 +241,7 @@ import iad1tya.echo.music.extensions.metadata
 import iad1tya.echo.music.ui.player.CanvasArtworkPlaybackCache
 import iad1tya.echo.music.ui.player.normalizeCanvasArtistName
 import iad1tya.echo.music.ui.player.normalizeCanvasSongTitle
-import iad1tya.echo.music.echomusiccanvas.echomusicCanvasProvider
+import iad1tya.sonoromusic.music.canvas.sonoromusicCanvasProvider
 import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
@@ -626,7 +626,7 @@ fun BottomSheetPlayer(
             val s = normalizeCanvasSongTitle(requestedTitle)
             val a = normalizeCanvasArtistName(requestedArtist)
             
-            val fetched = echomusicCanvasProvider.getBySongArtist(s, a)
+            val fetched = sonoromusicCanvasProvider.getBySongArtist(s, a)
                 ?.takeIf { !it.preferredAnimationUrl.isNullOrBlank() }
                 ?: TidalCanvasProvider.getBySongArtist(s, a, requestedAlbum)
                 ?.takeIf { !it.preferredAnimationUrl.isNullOrBlank() }

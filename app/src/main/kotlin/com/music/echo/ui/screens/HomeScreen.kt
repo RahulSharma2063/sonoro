@@ -1280,7 +1280,7 @@ fun HomeScreen(
                             echoBrainPlaylists?.takeIf { it.isNotEmpty() }?.let { playlists ->
                                 item(key = "echo_brain_playlists_title") {
                                     NavigationTitle(
-                                        title = "Echo Brain Recommends",
+                                        title = "Sonoro Brain Recommends",
                                         modifier = Modifier.animateItem()
                                     )
                                 }

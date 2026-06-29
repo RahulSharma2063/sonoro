@@ -30,7 +30,7 @@ android {
 
 
     defaultConfig {
-        applicationId = "iad1tya.echo.music"
+        applicationId = "iad1tya.sonoro.music"
         minSdk = 26
         targetSdk = 36
         versionCode = 516
@@ -321,7 +321,7 @@ dependencies {
     implementation(project(":shazamkit"))
     implementation(project(":artistvideo"))
     implementation(project(":applecanvas"))
-    implementation(project(":echomusiccanvas"))
+    implementation(project(":sonoromusiccanvas"))
     implementation(project(":paxsenixlyrics"))
     implementation(project(":jiosaavn"))
     implementation(project(":unison"))
