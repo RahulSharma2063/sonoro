@@ -77,6 +77,13 @@ class App : Application(), SingletonImageLoader.Factory {
         
         applicationScope.launch {
             initializeSettings()
+            
+            // Warm the cipher WebView off the first-play critical path
+            launch(Dispatchers.IO) {
+                kotlinx.coroutines.delay(1500)
+                CipherDeobfuscator.prewarm()
+            }
+
             observeSettingsChanges()
         }
     }

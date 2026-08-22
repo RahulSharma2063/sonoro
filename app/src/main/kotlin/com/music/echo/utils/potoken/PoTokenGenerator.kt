@@ -44,29 +44,35 @@ class PoTokenGenerator {
         }
     }
 
-    
     private suspend fun getWebClientPoToken(videoId: String, sessionId: String, forceRecreate: Boolean): PoTokenResult {
         Timber.tag(TAG).d("Web poToken requested: videoId=$videoId, sessionId=$sessionId")
 
         val (poTokenGenerator, streamingPot, hasBeenRecreated) =
             webPoTokenGenLock.withLock {
                 val shouldRecreate =
-                    forceRecreate || webPoTokenGenerator == null || webPoTokenGenerator!!.isExpired || webPoTokenSessionId != sessionId
+                    forceRecreate || webPoTokenGenerator == null || webPoTokenGenerator!!.isExpired ||
+                        webPoTokenGenerator!!.isDead ||
+                        webPoTokenSessionId != sessionId
 
                 if (shouldRecreate) {
                     Timber.tag(TAG).d("Creating new PoTokenWebView (forceRecreate=$forceRecreate)")
-                    webPoTokenSessionId = sessionId
 
                     withContext(Dispatchers.Main) {
                         webPoTokenGenerator?.close()
                     }
 
-                    
-                    webPoTokenGenerator = PoTokenWebView.getNewPoTokenGenerator(CipherDeobfuscator.appContext)
+                    val newGenerator = PoTokenWebView.getNewPoTokenGenerator(CipherDeobfuscator.appContext)
 
+                    val newStreamingPot = try {
+                        newGenerator.generatePoToken(sessionId)
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) { newGenerator.close() }
+                        throw e
+                    }
                     
-                    
-                    webPoTokenStreamingPot = webPoTokenGenerator!!.generatePoToken(webPoTokenSessionId!!)
+                    webPoTokenSessionId = sessionId
+                    webPoTokenGenerator = newGenerator
+                    webPoTokenStreamingPot = newStreamingPot
                     Timber.tag(TAG).d("Streaming poToken generated for sessionId=${webPoTokenSessionId?.take(20)}...")
                 }
 
@@ -77,13 +83,8 @@ class PoTokenGenerator {
             poTokenGenerator.generatePoToken(videoId)
         } catch (throwable: Throwable) {
             if (hasBeenRecreated) {
-                
-                
                 throw throwable
             } else {
-                
-                
-                
                 Timber.tag(TAG).e(throwable, "Failed to obtain poToken, retrying")
                 return getWebClientPoToken(videoId = videoId, sessionId = sessionId, forceRecreate = true)
             }

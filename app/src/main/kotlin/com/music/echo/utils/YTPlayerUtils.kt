@@ -514,14 +514,16 @@ object YTPlayerUtils {
             "AGE_CHECK_REQUIRED",
             "AGE_VERIFICATION_REQUIRED",
             "CONTENT_CHECK_REQUIRED"
-        )
+        ) || (mainStatus == "LOGIN_REQUIRED" && mainPlayerResponse.playabilityStatus.reason?.contains("age", ignoreCase = true) == true)
         wasOriginallyAgeRestricted = isAgeRestrictedFromResponse
 
         if (isAgeRestrictedFromResponse && isLoggedIn) {
-            
             Timber.tag(logTag).d("Age-restricted detected, using WEB_CREATOR")
             Log.i(TAG, "Age-restricted: using WEB_CREATOR for videoId=$videoId")
-            val creatorResponse = YouTube.player(videoId, playlistId, WEB_CREATOR, null, null).getOrNull()
+            val creatorResponse = YouTube.player(videoId, playlistId, WEB_CREATOR, null, null)
+                .onFailure {
+                    Timber.tag(logTag).e(it, "player() request FAILED for WEB_CREATOR")
+                }.getOrNull()
             if (creatorResponse?.playabilityStatus?.status == "OK") {
                 Timber.tag(logTag).d("WEB_CREATOR works for age-restricted content")
                 mainPlayerResponse = creatorResponse
@@ -550,20 +552,18 @@ object YTPlayerUtils {
         var isAgeRestricted = currentStatus in listOf(
             "AGE_CHECK_REQUIRED",
             "AGE_VERIFICATION_REQUIRED",
-            "CONTENT_CHECK_REQUIRED"
+            "CONTENT_CHECK_REQUIRED",
+            "UNPLAYABLE",
+            "LOGIN_REQUIRED"
         )
 
         if (isAgeRestricted) {
-            Timber.tag(logTag).d("Content is still age-restricted (status: $currentStatus), will try fallback clients")
-            Log.i(TAG, "Age-restricted content detected: videoId=$videoId, status=$currentStatus")
+            Timber.tag(logTag).d("Content needs fallback (status: $currentStatus)")
+            Log.i("YTPlayerUtils", "Unplayable content detected: videoId=$videoId, status=$currentStatus")
         }
 
-        
         val isPrivateTrack = mainPlayerResponse.videoDetails?.musicVideoType == "MUSIC_VIDEO_TYPE_PRIVATELY_OWNED_TRACK"
 
-        
-        
-        
         val startIndex = when {
             isPrivateTrack -> 1  
             isAgeRestricted -> 0
@@ -571,31 +571,25 @@ object YTPlayerUtils {
         }
 
         for (clientIndex in (startIndex until STREAM_FALLBACK_CLIENTS.size)) {
-            
             format = null
             streamUrl = null
             streamExpiresInSeconds = null
 
-            
             val client: YouTubeClient
             if (clientIndex == -1) {
-                
                 client = MAIN_CLIENT
                 streamPlayerResponse = retryMainPlayerResponse ?: mainPlayerResponse
                 Timber.tag(logTag).d("Trying stream from MAIN_CLIENT: ${client.clientName}")
             } else {
-                
                 client = STREAM_FALLBACK_CLIENTS[clientIndex]
                 Timber.tag(logTag).d("Trying fallback client ${clientIndex + 1}/${STREAM_FALLBACK_CLIENTS.size}: ${client.clientName}")
                 PlaybackLogManager.log(PlaybackLogLevel.DEBUG, "Trying fallback [${clientIndex + 1}/${STREAM_FALLBACK_CLIENTS.size}]", client.clientName)
 
                 if (client.loginRequired && !isLoggedIn && YouTube.cookie == null) {
-                    
                     Timber.tag(logTag).d("Skipping client ${client.clientName} - requires login but user is not logged in")
                     continue
                 }
 
-                
                 if (client.useWebPoTokens && poToken == null && sessionId != null) {
                     Timber.tag(logTag).d("Lazily generating PoToken for fallback web client: ${client.clientName}")
                     try {
@@ -611,7 +605,10 @@ object YTPlayerUtils {
                 
                 val clientSigTimestamp = if (wasOriginallyAgeRestricted) null else signatureTimestamp.timestamp
                 streamPlayerResponse =
-                    YouTube.player(videoId, playlistId, client, clientSigTimestamp, clientPoToken).getOrNull()
+                    YouTube.player(videoId, playlistId, client, clientSigTimestamp, clientPoToken)
+                        .onFailure {
+                            Timber.tag(logTag).e(it, "player() request FAILED for %s", client.clientName)
+                        }.getOrNull()
             }
 
             

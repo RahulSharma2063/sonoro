@@ -191,8 +191,9 @@ run_on_emulator.sh
 build_and_sign_apk.sh
 
 # YouTube tokens and sensitive assets
-**/assets/po_token.html
+
 **/assets/*token*
+!**/assets/po_token.html
 **/assets/*secret*
 **/assets/*key*
 
@@ -251,3 +252,7 @@ node_modules/
 graphify-out/
 graph.html
 !app/libs/discord_partner_sdk.aar
+
+# Cloned submodules and local downloads
+.temp_core/
+Echo-Music-main/

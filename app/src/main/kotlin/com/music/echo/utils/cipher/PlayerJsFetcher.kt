@@ -2,6 +2,7 @@ package iad1tya.echo.music.utils.cipher
 
 import com.music.innertube.YouTube
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -18,7 +19,6 @@ object PlayerJsFetcher {
         .proxy(YouTube.proxy)
         .build()
 
-    
     private val PLAYER_HASH_REGEX = Regex("""\\?/s\\?/player\\?/([a-zA-Z0-9_-]+)\\?/""")
 
     private fun getCacheDir(): File = File(CipherDeobfuscator.appContext.filesDir, "cipher_cache")
@@ -32,7 +32,6 @@ object PlayerJsFetcher {
             val cacheDir = getCacheDir()
             if (!cacheDir.exists()) cacheDir.mkdirs()
 
-            
             if (!forceRefresh) {
                 val cached = readFromCache()
                 if (cached != null) {
@@ -41,7 +40,6 @@ object PlayerJsFetcher {
                 }
             }
 
-            
             val hash = fetchPlayerHash()
             if (hash == null) {
                 Timber.tag(TAG).e("Failed to extract player hash from iframe_api")
@@ -49,7 +47,6 @@ object PlayerJsFetcher {
             }
             Timber.tag(TAG).d("Extracted player hash: $hash")
 
-            
             val playerJs = downloadPlayerJs(hash)
             if (playerJs == null) {
                 Timber.tag(TAG).e("Failed to download player JS for hash=$hash")
@@ -57,7 +54,6 @@ object PlayerJsFetcher {
             }
             Timber.tag(TAG).d("Downloaded player JS: ${playerJs.length} chars")
 
-            
             writeToCache(hash, playerJs)
 
             Pair(playerJs, hash)
@@ -71,7 +67,10 @@ object PlayerJsFetcher {
         try {
             val cacheDir = getCacheDir()
             if (cacheDir.exists()) {
-                cacheDir.listFiles()?.forEach { it.delete() }
+                val files = cacheDir.listFiles()?.filter {
+                    it.name.startsWith("player_") || it.name == "current_hash.txt"
+                }
+                files?.forEach { it.delete() }
             }
             Timber.tag(TAG).d("Cache invalidated")
         } catch (e: Exception) {
@@ -90,9 +89,8 @@ object PlayerJsFetcher {
             val hash = hashData[0]
             val timestamp = hashData[1].toLongOrNull() ?: return null
 
-            
-            if (System.currentTimeMillis() - timestamp > CACHE_TTL_MS) {
-                Timber.tag(TAG).d("Cache expired (hash=$hash)")
+            if (System.currentTimeMillis() - timestamp !in 0..<CACHE_TTL_MS) {
+                Timber.tag(TAG).d("Cache expired or clock skew detected (hash=$hash)")
                 return null
             }
 
@@ -109,14 +107,16 @@ object PlayerJsFetcher {
         }
     }
 
-    private fun writeToCache(hash: String, playerJs: String) {
+    private val cacheMutex = kotlinx.coroutines.sync.Mutex()
+
+    private suspend fun writeToCache(hash: String, playerJs: String) = cacheMutex.withLock {
         try {
             val cacheDir = getCacheDir()
             
             cacheDir.listFiles()?.filter { it.name.startsWith("player_") }?.forEach { it.delete() }
 
-            getCacheFile(hash).writeText(playerJs)
-            getHashFile().writeText("$hash\n${System.currentTimeMillis()}")
+            PlayerConfigStore.writeAtomic(getCacheFile(hash), playerJs)
+            PlayerConfigStore.writeAtomic(getHashFile(), "$hash\n${System.currentTimeMillis()}")
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Error writing cache: ${e.message}")
         }

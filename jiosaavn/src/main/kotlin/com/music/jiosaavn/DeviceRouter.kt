@@ -10,9 +10,7 @@ object DeviceRouter {
     private const val KEY_DEVICE_ID = "device_id"
 
     private val SERVERS = listOf(
-        "https://saavn.echomusic.fun",
-        "https://jiosaavn-api.pc-adityadav9532.workers.dev",
-        "https://jiosaavn-api.mac-adityadav9532.workers.dev"
+        "https://jiosaavn-api.vercel.app"
     )
 
     private var deviceId: String? = null

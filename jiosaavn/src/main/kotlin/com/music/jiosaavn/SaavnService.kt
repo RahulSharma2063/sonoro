@@ -31,60 +31,107 @@ import kotlinx.serialization.json.Json
 
 @Serializable
 data class SaavnDownloadUrl(
-    @SerialName("quality") val quality: String = "",
-    @SerialName("url")     val url: String     = ""
+    val quality: String = "",
+    val url: String = ""
 )
 
 @Serializable
 data class SaavnImage(
-    @SerialName("quality") val quality: String = "",
-    @SerialName("url")     val url: String     = ""
+    val quality: String = "",
+    val url: String = ""
 )
 
 @Serializable
 data class SaavnArtistItem(
-    @SerialName("id")   val id: String   = "",
-    @SerialName("name") val name: String = ""
+    val id: String = "",
+    val name: String = ""
 )
 
 @Serializable
 data class SaavnArtists(
-    @SerialName("primary")  val primary:  List<SaavnArtistItem> = emptyList(),
-    @SerialName("featured") val featured: List<SaavnArtistItem> = emptyList(),
-    @SerialName("all")      val all:      List<SaavnArtistItem> = emptyList()
+    val primary:  List<SaavnArtistItem> = emptyList(),
+    val featured: List<SaavnArtistItem> = emptyList(),
+    val all:      List<SaavnArtistItem> = emptyList()
+)
+
+@Serializable
+data class SaavnImagesMap(
+    @SerialName("50x50") val fifty: String? = null,
+    @SerialName("150x150") val oneFifty: String? = null,
+    @SerialName("500x500") val fiveHundred: String? = null
+)
+
+@Serializable
+data class SaavnMoreInfo(
+    val singers: String? = null,
+    val language: String? = null
 )
 
 @Serializable
 data class SaavnSong(
     @SerialName("id")              val id:              String                 = "",
-    @SerialName("name")            val name:            String                 = "",
-    @SerialName("duration")        val duration:        Int?                   = null,
-    @SerialName("explicitContent") val explicitContent: Boolean                = false,
-    @SerialName("artists")         val artists:         SaavnArtists           = SaavnArtists(),
-    @SerialName("image")           val image:           List<SaavnImage>       = emptyList(),
-    @SerialName("downloadUrl")     val downloadUrl:     List<SaavnDownloadUrl> = emptyList()
-)
+    @SerialName("title")           val title:           String?                = null,
+    @SerialName("song")            val song:            String?                = null,
+    @SerialName("duration")        val durationStr:     String?                = null,
+    @SerialName("images")          val images:          SaavnImagesMap?        = null,
+    @SerialName("media_url")       val mediaUrl:        String?                = null,
+    @SerialName("media_urls")      val mediaUrls:       Map<String, String>?   = null,
+    @SerialName("more_info")       val moreInfo:        SaavnMoreInfo?         = null,
+    @SerialName("primary_artists") val primaryArtistsStr: String?              = null,
+    @SerialName("singers")         val singersStr:      String?                = null
+) {
+    val name: String
+        get() = song ?: title ?: ""
+
+    val duration: Int?
+        get() {
+            val dur = durationStr ?: return null
+            val parts = dur.split(":")
+            if (parts.size == 2) {
+                val min = parts[0].toIntOrNull() ?: return null
+                val sec = parts[1].toIntOrNull() ?: return null
+                return min * 60 + sec
+            }
+            return dur.toIntOrNull()
+        }
+
+    val explicitContent: Boolean
+        get() = false
+
+    val artists: SaavnArtists
+        get() {
+            val s = singersStr ?: primaryArtistsStr ?: moreInfo?.singers ?: ""
+            val items = if (s.isBlank()) emptyList() else s.split(",").map { 
+                SaavnArtistItem(id = "", name = it.trim()) 
+            }
+            return SaavnArtists(primary = items, featured = emptyList(), all = items)
+        }
+
+    val image: List<SaavnImage>
+        get() {
+            val map = images ?: return emptyList()
+            return listOfNotNull(
+                map.fifty?.let { SaavnImage("50x50", it) },
+                map.oneFifty?.let { SaavnImage("150x150", it) },
+                map.fiveHundred?.let { SaavnImage("500x500", it) }
+            )
+        }
+
+    val downloadUrl: List<SaavnDownloadUrl>
+        get() {
+            val urls = mediaUrls ?: return emptyList()
+            return urls.map { (q, url) ->
+                SaavnDownloadUrl(quality = q.lowercase().replace("_", ""), url = url)
+            }
+        }
+}
 
 // ─── Search response ─────────────────────────────────────────────────────────
 
 @Serializable
-data class SaavnSearchSongsResult(
-    @SerialName("total")   val total: Int             = 0,
-    @SerialName("results") val results: List<SaavnSong> = emptyList()
-)
-
-@Serializable
 data class SaavnSearchResponse(
-    @SerialName("success") val success: Boolean                    = false,
-    @SerialName("data")    val data:    SaavnSearchSongsResult?    = null
-)
-
-// ─── Song-by-ID response ─────────────────────────────────────────────────────
-
-@Serializable
-data class SaavnSongResponse(
-    @SerialName("success") val success: Boolean          = false,
-    @SerialName("data")    val data:    List<SaavnSong>  = emptyList()
+    val status: Boolean = false,
+    val results: List<SaavnSong> = emptyList()
 )
 
 // ─── Service ─────────────────────────────────────────────────────────────────
@@ -124,7 +171,7 @@ object SaavnService {
         
         while (attempt < 3) {
             try {
-                val url = "${DeviceRouter.getCurrentServer()}/api/$endpoint"
+                val url = "${DeviceRouter.getCurrentServer()}/$endpoint"
                 val response = client.get(url, block)
                 if (response.status.value in 500..599) {
                     DeviceRouter.fallbackToNextServer()
@@ -148,7 +195,7 @@ object SaavnService {
      *         request fails or returns no results.
      */
     suspend fun searchSongs(query: String): Result<List<SaavnSong>> = runCatching {
-        val response = getWithFallback("search/songs") {
+        val response = getWithFallback("search") {
             parameter("query", query)
             parameter("limit", 5)   // fetch top-5 candidates; we only use #1
         }
@@ -158,9 +205,9 @@ object SaavnService {
         }
 
         val body = response.body<SaavnSearchResponse>()
-        val results = body.data?.results.orEmpty()
+        val results = body.results
 
-        if (!body.success || results.isEmpty()) {
+        if (!body.status || results.isEmpty()) {
             throw NoSuchElementException("No songs found on JioSaavn for: \"$query\"")
         }
 
@@ -177,15 +224,16 @@ object SaavnService {
      */
     suspend fun getBestStreamUrl(saavnSongId: String, quality: String): String? =
         runCatching {
-            val response = getWithFallback("songs/$saavnSongId")
+            val response = getWithFallback("song") {
+                parameter("id", saavnSongId)
+            }
 
             if (response.status != HttpStatusCode.OK) return@runCatching null
 
-            val body = response.body<SaavnSongResponse>()
-            if (!body.success) return@runCatching null
+            val song = response.body<SaavnSong>()
+            if (song.id.isBlank()) return@runCatching null
 
-            val urls = body.data.firstOrNull()?.downloadUrl.orEmpty()
-                .filter { it.url.isNotBlank() }
+            val urls = song.downloadUrl.filter { it.url.isNotBlank() }
 
             if (urls.isEmpty()) return@runCatching null
 
