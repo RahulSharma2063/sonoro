@@ -8,6 +8,8 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import iad1tya.echo.music.utils.cipher.CipherDeobfuscator
 import iad1tya.echo.music.utils.cipher.PlayerJsFetcher
+import iad1tya.echo.music.utils.PlaybackLogManager
+import iad1tya.echo.music.utils.PlaybackLogLevel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -37,22 +39,26 @@ object EjsNTransformSolver {
         return withContext(NonCancellable) {
             val solver = getOrCreateSolver()
             if (solver == null) {
+                PlaybackLogManager.log(PlaybackLogLevel.WARNING, "EJS n-solver creation failed (solver is null)")
                 return@withContext url
             }
 
             if (!solver.nFunctionAvailable) {
+                PlaybackLogManager.log(PlaybackLogLevel.WARNING, "EJS n-solver not available (nFunctionAvailable is false)")
                 Timber.tag(TAG).e("EJS n-solver not available")
                 return@withContext url
             }
 
             try {
                 val transformed = solver.transformN(nValue)
+                PlaybackLogManager.log(PlaybackLogLevel.DEBUG, "EJS n-transformed", "$nValue -> $transformed")
                 Timber.tag(TAG).d("SABR n-param transformed: $nValue -> $transformed")
                 url.replaceFirst(
                     Regex("([?&])n=[^&]+"),
                     "$1n=${Uri.encode(transformed)}"
                 )
             } catch (e: Exception) {
+                PlaybackLogManager.log(PlaybackLogLevel.ERROR, "SABR n-transform failed", "${e::class.simpleName}: ${e.message}")
                 Timber.tag(TAG).e(e, "SABR n-transform failed: ${e.message}")
                 url
             }
@@ -227,12 +233,14 @@ function transformN(nValue) {
         @JavascriptInterface
         fun onSolverReady(nAvailable: String) {
             nFunctionAvailable = nAvailable == "true"
+            PlaybackLogManager.log(PlaybackLogLevel.INFO, "EJS solver ready", "nFunctionAvailable=$nFunctionAvailable")
             Timber.tag(TAG).d("EJS solver ready: n=$nFunctionAvailable")
             initContinuation.resume(this)
         }
 
         @JavascriptInterface
         fun onSolverError(error: String) {
+            PlaybackLogManager.log(PlaybackLogLevel.ERROR, "EJS solver initialization failed", error)
             Timber.tag(TAG).e("EJS solver error: $error")
             initContinuation.resume(this)
         }

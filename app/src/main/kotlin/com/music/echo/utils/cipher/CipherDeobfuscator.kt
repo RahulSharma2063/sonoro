@@ -7,6 +7,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import iad1tya.echo.music.utils.PlaybackLogManager
+import iad1tya.echo.music.utils.PlaybackLogLevel
 
 object CipherDeobfuscator {
     private const val TAG = "echomusic_CipherDeobfusc"
@@ -44,9 +46,11 @@ object CipherDeobfuscator {
         } catch (e: CancellationException) {
             throw e
         } catch (e: CipherRendererGoneException) {
+            PlaybackLogManager.log(PlaybackLogLevel.ERROR, "Cipher renderer gone during deobfuscation", e.message)
             onRendererGone(e, "deobfuscate")
             null
         } catch (e: Exception) {
+            PlaybackLogManager.log(PlaybackLogLevel.WARNING, "Cipher deobfuscation failed, retrying with fresh JS", "${e::class.simpleName}: ${e.message}")
             Timber.tag(TAG).e(e, "Cipher deobfuscation failed, retrying with fresh JS: ${e.message}")
             try {
                 PlayerJsFetcher.invalidateCache()
@@ -56,9 +60,11 @@ object CipherDeobfuscator {
             } catch (retryE: CancellationException) {
                 throw retryE
             } catch (retryE: CipherRendererGoneException) {
+                PlaybackLogManager.log(PlaybackLogLevel.ERROR, "Cipher renderer gone during retry", retryE.message)
                 onRendererGone(retryE, "deobfuscate-retry")
                 null
             } catch (retryE: Exception) {
+                PlaybackLogManager.log(PlaybackLogLevel.ERROR, "Cipher deobfuscation retry failed", "${retryE::class.simpleName}: ${retryE.message}")
                 Timber.tag(TAG).e(retryE, "Cipher deobfuscation retry also failed: ${retryE.message}")
                 null
             }
@@ -74,10 +80,12 @@ object CipherDeobfuscator {
         val baseUrl = params["url"]
 
         if (obfuscatedSig == null || baseUrl == null) {
+            PlaybackLogManager.log(PlaybackLogLevel.WARNING, "Failed to parse signatureCipher params", "s=${obfuscatedSig != null}, url=${baseUrl != null}")
             Timber.tag(TAG).e("Could not parse signatureCipher params: s=${obfuscatedSig != null}, url=${baseUrl != null}")
             return null
         }
 
+        PlaybackLogManager.log(PlaybackLogLevel.DEBUG, "Deobfuscating cipher", "sig=${obfuscatedSig.take(15)}...")
         Timber.tag(TAG).d("Deobfuscating cipher for $videoId: sig=${obfuscatedSig.take(20)}..., sp=$sigParam")
 
         val webView = getOrCreateWebView(forceRefresh = isRetry)
@@ -88,6 +96,7 @@ object CipherDeobfuscator {
         val separator = if ("?" in baseUrl) "&" else "?"
         val finalUrl = "$baseUrl${separator}${sigParam}=${Uri.encode(deobfuscatedSig)}"
 
+        PlaybackLogManager.log(PlaybackLogLevel.DEBUG, "Cipher deobfuscated successfully", "len=${deobfuscatedSig.length}")
         Timber.tag(TAG).d("Custom cipher deobfuscation succeeded for $videoId")
         return finalUrl
     }

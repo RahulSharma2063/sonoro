@@ -842,9 +842,14 @@ object YTPlayerUtils {
 
             val response = httpClient.newCall(requestBuilder.build()).execute()
             val isSuccessful = response.isSuccessful
+            PlaybackLogManager.log(
+                if (isSuccessful) PlaybackLogLevel.INFO else PlaybackLogLevel.WARNING,
+                "Stream validation: ${if (isSuccessful) "Success" else "Failed"} (${response.code})"
+            )
             Timber.tag(logTag).d("Stream URL validation result: ${if (isSuccessful) "Success" else "Failed"} (${response.code})")
             return isSuccessful
         } catch (e: Exception) {
+            PlaybackLogManager.log(PlaybackLogLevel.ERROR, "Stream validation exception", "${e::class.simpleName}: ${e.message}")
             Timber.tag(logTag).e(e, "Stream URL validation failed with exception")
             reportException(e)
         }
