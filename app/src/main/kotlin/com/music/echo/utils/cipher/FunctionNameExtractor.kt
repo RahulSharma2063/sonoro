@@ -77,17 +77,20 @@ object FunctionNameExtractor {
     }
 
     fun extractSigFunctionInfo(playerJs: String): SigFunctionInfo? {
-        // Pattern for new obfuscated signature calling method (e.g. nh(26,103,H))
-        val newPattern = Regex("""\.set\(\s*["']alr["']\s*,\s*["']yes["']\s*\);\s*([a-zA-Z0-9${'$'}]+)\s*&&\s*\(\1\s*=\s*[a-zA-Z0-9${'$'}_.()]+\(\s*\d+\s*,\s*\d+\s*,\s*([a-zA-Z0-9${'$'}]+)\((\d+)\s*,\s*(\d+)\s*,\s*\1\)\)""")
+        // Pattern for new obfuscated signature calling method (e.g. Af(1,5321,nh(26,103,H)))
+        val newPattern = Regex("""\.set\(\s*["']alr["']\s*,\s*["']yes["']\s*\);\s*([a-zA-Z0-9${'$'}]+)\s*&&\s*\(\1\s*=\s*([a-zA-Z0-9${'$'}]+)\(\s*(\d+)\s*,\s*(\d+)\s*,\s*([a-zA-Z0-9${'$'}]+)\((\d+)\s*,\s*(\d+)\s*,\s*\1\)\)""")
         val newMatch = newPattern.find(playerJs)
         if (newMatch != null) {
-            val funcName = newMatch.groupValues[2]
-            val param1 = newMatch.groupValues[3]
-            val param2 = newMatch.groupValues[4]
-            val jsExpr = "$funcName($param1,$param2,INPUT)"
-            Timber.tag(TAG).d("Sig function found with new pattern: $funcName ($param1, $param2) -> jsExpr=$jsExpr")
+            val outerFunc = newMatch.groupValues[2]
+            val outerParam1 = newMatch.groupValues[3]
+            val outerParam2 = newMatch.groupValues[4]
+            val innerFunc = newMatch.groupValues[5]
+            val innerParam1 = newMatch.groupValues[6]
+            val innerParam2 = newMatch.groupValues[7]
+            val jsExpr = "$outerFunc($outerParam1,$outerParam2,$innerFunc($innerParam1,$innerParam2,INPUT))"
+            Timber.tag(TAG).d("Sig function found with new pattern: $innerFunc -> jsExpr=$jsExpr")
             return SigFunctionInfo(
-                name = funcName,
+                name = innerFunc,
                 constantArg = null,
                 jsExpression = jsExpr
             )
