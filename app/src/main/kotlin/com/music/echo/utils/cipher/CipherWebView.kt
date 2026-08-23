@@ -244,6 +244,17 @@ function discoverAndInit() {
             info = "brute_force:tested=" + tested + "/" + keys.length;
             if (!nFuncName && candidates.length > 0) {
                 info += ",near_misses=" + candidates.slice(0, 5).join("|");
+                for (var j = 0; j < candidates.length; j++) {
+                    var parts = candidates[j].split(":");
+                    var k = parts[0];
+                    var res = parts.slice(1).join(":");
+                    if (res.length >= 10 && res.length <= 30 && /^[a-zA-Z0-9_-]+$/.test(res)) {
+                        window._nTransformFunc = window[k];
+                        nFuncName = k;
+                        info += ",fallback_match=" + k;
+                        break;
+                    }
+                }
             }
         } catch(e) {
             info = "brute_force_error:" + e;

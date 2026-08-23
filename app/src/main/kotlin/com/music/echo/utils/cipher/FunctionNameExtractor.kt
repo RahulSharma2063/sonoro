@@ -77,6 +77,22 @@ object FunctionNameExtractor {
     }
 
     fun extractSigFunctionInfo(playerJs: String): SigFunctionInfo? {
+        // Pattern for new obfuscated signature calling method (e.g. nh(26,103,H))
+        val newPattern = Regex("""\.set\(\s*["']alr["']\s*,\s*["']yes["']\s*\);\s*([a-zA-Z0-9${'$'}]+)\s*&&\s*\(\1\s*=\s*[a-zA-Z0-9${'$'}_.()]+\(\s*\d+\s*,\s*\d+\s*,\s*([a-zA-Z0-9${'$'}]+)\((\d+)\s*,\s*(\d+)\s*,\s*\1\)\)""")
+        val newMatch = newPattern.find(playerJs)
+        if (newMatch != null) {
+            val funcName = newMatch.groupValues[2]
+            val param1 = newMatch.groupValues[3]
+            val param2 = newMatch.groupValues[4]
+            val jsExpr = "$funcName($param1,$param2,INPUT)"
+            Timber.tag(TAG).d("Sig function found with new pattern: $funcName ($param1, $param2) -> jsExpr=$jsExpr")
+            return SigFunctionInfo(
+                name = funcName,
+                constantArg = null,
+                jsExpression = jsExpr
+            )
+        }
+
         for ((index, pattern) in SIG_FUNCTION_PATTERNS.withIndex()) {
             val match = pattern.find(playerJs)
             if (match != null) {

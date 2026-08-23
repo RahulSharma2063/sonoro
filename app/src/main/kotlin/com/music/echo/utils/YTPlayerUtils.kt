@@ -661,7 +661,7 @@ object YTPlayerUtils {
                 if (currentClient.useWebPoTokens) {
                     try {
                         Timber.tag(logTag).d("Applying n-transform to stream URL for ${currentClient.clientName}")
-                        val transformed = EjsNTransformSolver.transformNParamInUrl(streamUrl!!)
+                        val transformed = iad1tya.echo.music.utils.cipher.CipherDeobfuscator.transformNParamInUrl(streamUrl!!)
                         if (transformed != streamUrl) {
                             streamUrl = transformed
                             Timber.tag(logTag).d("N-transform applied successfully")
