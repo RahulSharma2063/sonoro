@@ -341,45 +341,7 @@ class PoTokenWebView private constructor(
         }
     }
 
-    private fun stringToU8(s: String): String {
-        val bytes = s.toByteArray(Charsets.UTF_8)
-        return "[" + bytes.joinToString(",") { (it.toInt() and 0xFF).toString() } + "]"
-    }
 
-    private fun u8ToBase64(u8: String): String {
-        val bytes = u8.split(",").map { it.trim().toInt().toByte() }.toByteArray()
-        return android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP or android.util.Base64.URL_SAFE or android.util.Base64.NO_PADDING)
-    }
-
-    private fun parseChallengeData(responseBody: String): String {
-        val startIdx = responseBody.indexOf("[")
-        if (startIdx < 0) throw PoTokenException("Malformed challenge data: no JSON array found")
-        val arrayStr = responseBody.substring(startIdx)
-        val endIdx = arrayStr.lastIndexOf("]")
-        if (endIdx < 0) throw PoTokenException("Malformed challenge data: unbalanced brackets")
-        return arrayStr.substring(0, endIdx + 1)
-    }
-
-    private fun parseIntegrityTokenData(responseBody: String): Pair<String, Long> {
-        val startIdx = responseBody.indexOf("[")
-        if (startIdx < 0) throw PoTokenException("Malformed integrity token data: no JSON array found")
-        val arrayStr = responseBody.substring(startIdx)
-        val endIdx = arrayStr.lastIndexOf("]")
-        if (endIdx < 0) throw PoTokenException("Malformed integrity token data: unbalanced brackets")
-        val clean = arrayStr.substring(0, endIdx + 1)
-        val array = org.json.JSONArray(clean)
-        val token = array.getString(1)
-        val ttl = array.getLong(2)
-        return Pair(token, ttl)
-    }
-
-    private fun buildExceptionForJsError(error: String): Exception {
-        return if (error.contains("PMD:Undefined")) {
-            BadWebViewException(error)
-        } else {
-            PoTokenException(error)
-        }
-    }
 
     companion object {
         private const val TAG = "PoTokenWebView"
